@@ -3,7 +3,9 @@
 Claude Code から OpenAI Codex(ChatGPT 側)を呼び出すプラグイン `openai/codex-plugin-cc` について、SNS 投稿の内容を一次情報で検証した結果と、正しい導入手順をまとめたものです。
 
 - 検証日: 2026-11-14
-- 一次情報: <https://github.com/openai/codex-plugin-cc> の README
+- 一次情報:
+  - <https://github.com/openai/codex-plugin-cc> の README とソースコード(バージョン 1.0.6、最新コミット 2026-07-07)
+  - <https://developers.openai.com/codex/pricing>(検索結果に出た同ページの要約で確認。ページ自体は直接開けていません)
 
 ## 検証結果
 
@@ -17,10 +19,32 @@ Claude Code から OpenAI Codex(ChatGPT 側)を呼び出すプラグイン `open
 | 「役割分担して」と送ると自動で分担される | 公式機能ではない | README に自動の役割分担機能の記載はない。委任は `/codex:rescue` などをユーザーが呼び出す形(自然文で Codex への委任を頼むことは可能) |
 | ChatGPT 側の使用量は ChatGPT のプランの範囲で使われる | おおむね正しい | README の記載は "Usage will contribute to your Codex usage limits." |
 
+### ソースコードの点検結果
+
+リポジトリを取得し、プラグインの全スクリプト(約5,300行)を点検しました。不審な点はありませんでした。
+
+- **出所**: 最新コミットは `openai.com` のアドレスによるもので、マニフェストの作者は OpenAI です。2026年3月末の OpenAI によるリリースとして複数の技術メディアが報じています。
+- **通信**: プラグイン自身は外部へ通信しません。ローカルの Unix ソケット/名前付きパイプで `codex app-server` とやり取りするだけで、OpenAI との通信は Codex CLI が行います。
+- **起動するプロセス**: `codex`、`git`、`node`、`npm --version` のみです。認証情報や SSH 鍵を読むコードはありません。
+- **フック**: セッション開始・終了時の後片付けと、停止時のレビューゲートの3つです。レビューゲートは既定で無効です。
+- **Codex のインストール**: `/codex:setup` は `npm install -g @openai/codex` を自動では実行せず、必ず確認を求めます。
+
+### 料金と使用量
+
+プラグイン経由の利用は、ChatGPT プランに含まれる Codex の使用量上限から消費されます。
+
+| プラン | 料金 | Codex の扱い |
+| --- | --- | --- |
+| Free | $0 | デスクトップアプリで利用可(段階的提供)。回数の記載なし |
+| Plus | $20/月 | 5時間枠あたりの目安がモデル別に示され、週次上限もありうる |
+| Pro | $100 / $200 / $500/月 | 現時点で5時間枠の上限なし |
+
+Plus と Pro は上限到達後に追加クレジットを購入できます。数値は変動するので、実際の残量は Codex の使用量ダッシュボードで確認してください。
+
 ### 未検証の点
 
-- OpenAI 公式ドキュメント・料金ページ(<https://developers.openai.com/codex/pricing>)での裏取りはしていません。プランごとの具体的な上限は未確認です。
-- 実際のインストールと動作確認はしていません。上記はすべて README の記載に基づきます。
+- 実際のインストールと動作確認はしていません(クラウド環境では実行できないため)。
+- 料金ページは直接開けておらず、上の表は検索結果に出た同ページの要約に基づきます。
 
 ## 正しい導入手順
 
@@ -97,6 +121,8 @@ Claude Code から OpenAI Codex(ChatGPT 側)を呼び出すプラグイン `open
 
 ## 注意点
 
+- **`/codex:rescue` は既定で書き込み可能**: 読み取り専用を明示的に頼まない限り `--write` が付き、Codex は承認なし(`approvalPolicy: never`)で作業フォルダ内のファイルを編集します。レビュー系コマンドは読み取り専用です。
+- **`/codex:transfer` は会話ログを渡す**: `~/.claude/projects` 配下の Claude Code のセッション記録が Codex(OpenAI 側)に渡されます。
 - **使用量**: プラグイン経由の利用は Codex の使用量上限に加算されます。
 - **レビューゲート**: `/codex:setup --enable-review-gate` で有効にすると、Claude の応答のたびに Codex がレビューし、問題があれば Claude が止まらず修正を続けます。README は「Claude と Codex の長時間ループになり、使用量上限を急速に消費しうる。セッションを見ていられるときだけ有効にすること」と警告しています。無効化は `/codex:setup --disable-review-gate` です。
 - **設定**: プラグインは Codex CLI と同じ設定を使います。プロジェクト単位の `.codex/config.toml` は、そのプロジェクトが信頼済みの場合だけ読み込まれます。
