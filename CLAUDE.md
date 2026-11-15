@@ -1,108 +1,104 @@
-# Claude–Codex 相互検証・共同作業規則
+# Claude–Codex Cross-Verification and Collaboration Rules
 
-## 1. 目的
+English | [日本語](CLAUDE.ja.md)
 
-このプロジェクトでは、Claude CodeとOpenAI Codexを連携させ、推論の誤り、ハルシネーション、不適切なコード変更を低減する。
+## 1. Purpose
 
-ClaudeとCodexのいずれも無条件に信頼しない。両者の判断は検証対象とし、最終的な判断権限はユーザーが持つ。
+This project combines Claude Code and OpenAI Codex to reduce reasoning errors, hallucinations, and inappropriate code changes.
 
-## 2. 役割分担
+Neither Claude nor Codex is trusted unconditionally. Both are subject to verification, and the user retains final authority.
 
-- Claude：独立分析、推論、コード作成、実装、検証
-- Codex：独立分析、推論、コード作成、実装、検証
-- ユーザー：研究方針、変更承認、実行者の指定、最終判断
+## 2. Roles
 
-役割は固定しない。ClaudeとCodexのどちらも書き込みを担当できる。
+- Claude: independent analysis, reasoning, code creation, implementation, and verification.
+- Codex: independent analysis, reasoning, code creation, implementation, and verification.
+- User: research direction, change approval, executor selection, and final decisions.
 
-## 3. 独立検証
+Roles are not fixed. Either Claude or Codex may perform approved writes.
 
-1. 重要な判断では、可能な範囲で双方が独立して分析する。
-2. Claudeの結論をCodexに無条件で追認させない。その逆も同様とする。
-3. 見解が異なる場合、相違点、各判断の根拠、未解決事項を提示する。
-4. 両者の見解が一致しても、その一致のみを正しさの証明としない。
-5. 根拠は一次資料、実験データ、コード、実行ログ、再現可能な検証を優先する。
-6. 確認した事実、推論、仮説、未確認事項を明確に区別する。
-7. 実行していない試験や、確認していない資料について、検証済みと報告しない。
+## 3. Independent verification
 
-## 4. ファイルの変更と承認
+1. For important decisions, both agents should analyze independently where practical.
+2. Do not ask Codex to endorse Claude's conclusion unconditionally, or vice versa.
+3. When conclusions differ, present the disagreement, supporting evidence, and unresolved questions.
+4. Agreement between the agents is not proof of correctness.
+5. Prefer primary sources, experimental data, code, execution logs, and reproducible checks.
+6. Distinguish verified facts, inferences, hypotheses, and unverified matters.
+7. Never report unperformed tests or unread sources as verified.
 
-1. 調査・分析・レビューの段階では、既存ファイルを変更しない。
-2. 変更前に対象ファイル、変更理由、修正差分（diff）、想定される影響、保存先、実行担当AIを提示する。
-3. ユーザーが具体的な変更内容と実行者を明示的に承認するまで、書き込みを実施しない。
-4. 承認後は、指定されたClaudeまたはCodexが変更を実行できる。
-5. 原則として既存ファイルを上書きせず、別名で保存する。
-6. 上書きは対象ファイルを指定した明示的な承認がある場合に限る。
-7. 新規ファイルの作成、削除、移動、名前変更も、対象と内容を提示して承認を得る。
-8. 承認は提示された作業範囲にのみ適用し、他の作業に拡張しない。
+## 4. File changes and approval
 
-## 5. 実装後の検証
+1. Do not modify existing files during investigation, analysis, or review.
+2. Before changes, present target files, rationale, the proposed diff, expected effects, destination, and executing AI.
+3. Do not write until the user explicitly approves the specific changes and executor.
+4. After approval, the designated Claude or Codex may execute the changes.
+5. By default, save under a new filename rather than overwriting an existing file.
+6. Overwriting requires explicit approval identifying the target file.
+7. New files, deletion, moves, and renames also require presentation of their targets and contents and user approval.
+8. Approval applies only to the presented scope; do not extend it to other work.
 
-1. 書き込みを担当したAIは、変更したファイルと処理結果を報告する。
-2. 可能な場合、もう一方のAIが変更差分と動作結果を検証する。
-3. テストを実施した場合は、実行コマンド、結果、失敗内容を報告する。
-4. テスト未実施の場合は、未実施と明示する。
-5. 検証で問題が見つかった場合、無断で再修正しない。再度変更案を提示する。
+## 5. Post-implementation verification
 
-## 6. 情報の外部送信
+1. The writing agent reports changed files and processing results.
+2. Where practical, the other agent checks the diff and behavior.
+3. For executed tests, report commands, results, and failures.
+4. Explicitly state when tests were not run.
+5. If verification finds a problem, present another change proposal rather than silently fixing it without approval.
 
-### 通常の連携
+## 6. External information transmission
 
-ユーザーが指定した作業範囲内で、公開済みコード、公開文献、および事前に共有を承認された情報を利用できる。
+### Normal collaboration
 
-ClaudeとCodexの通常利用には、それぞれのサービスへの情報送信が伴う可能性がある。
+Within the user-specified scope, use public code, public literature, and information whose sharing was approved in advance. Normal use of Claude and Codex may transmit information to their respective services.
 
-### 個別承認が必要な情報
+### Information requiring separate approval
 
-次の情報を、通常の承認済み範囲を超えて別サービスへ送信する場合は、事前にユーザーの承認を得る。
+Before sending the following to another service beyond the normally approved scope, obtain user approval:
 
-- 未公開論文・研究計画
-- 研究の一次データ・実験ログ
-- 未公開ソースコード
-- ClaudeまたはChatGPTの会話履歴
-- 個人情報・契約情報・機密資料
+- Unpublished papers or research plans.
+- Primary research data and experimental logs.
+- Unpublished source code.
+- Claude or ChatGPT conversation histories.
+- Personal, contractual, or confidential information.
 
-送信前に、送信先、対象ファイル、送信目的、情報の範囲を明示する。
+Before transmission, identify the recipient service, target files, purpose, and information scope.
 
-### 原則として送信禁止
+### Credentials must not be transmitted
 
-APIキー、アクセストークン、パスワード、秘密鍵などの認証情報は送信しない。
+Do not transmit API keys, access tokens, passwords, private keys, or other authentication secrets. Check first if information may contain secrets.
 
-秘密情報が含まれる可能性がある場合、事前に確認する。
+## 7. Permissions and automatic execution
 
-## 7. 権限と自動実行
+1. Use Claude Code's manual permission mode by default.
+2. Do not enable automatic approval, privilege escalation, or removal of sandbox restrictions without user permission.
+3. Do not make file changes through automatic delegation to Codex.
+4. When using `/codex:rescue` or similar functions, check the purpose and write permissions.
+5. Enable the review gate only on explicit request.
+6. Do not run `/codex:transfer` without explicit approval.
+7. Stop change operations if permission settings cannot guarantee the approval conditions.
 
-1. Claude Codeの権限モードは原則として「手動」とする。
-2. ユーザーの許可なく、自動承認、権限昇格、サンドボックス制限解除を有効にしない。
-3. Codexへの自動委任でファイル変更を行わない。
-4. `/codex:rescue` 等を使用するときは、変更権限と実行目的を確認する。
-5. レビューゲートは明示的に依頼された場合に限り有効にする。
-6. `/codex:transfer` は明示的な承認なしに実行しない。
-7. 権限設定によって承認条件を保証できない場合は、変更操作を停止する。
+## 8. GitHub and research-data protection
 
-## 8. GitHubと研究データの保護
+1. `git commit` and `git push` require separate approval.
+2. Destructive operations such as `git reset --hard` and `git clean` require impact review and explicit approval.
+3. Do not change repository visibility without authorization.
+4. Do not delete or overwrite primary research materials, experimental data, logs, or backups without authorization.
+5. GitHub transmission and local file writes are separate approval scopes.
 
-1. `git commit`、`git push` は個別の承認を必要とする。
-2. `git reset --hard`、`git clean` などの破壊的操作は、影響範囲の確認と明示的承認を必要とする。
-3. リポジトリの公開・非公開設定を無断で変更しない。
-4. 研究の一次資料、実験データ、ログ、バックアップを無断で削除・上書きしない。
-5. GitHubへの送信とローカルファイルへの書き込みは、別々の承認対象とする。
+## 9. Uncertainty
 
-## 9. 判断不能な場合
+If permissions, target files, changes, destinations, or external-sharing scope are unclear, ask the user rather than guessing and executing.
 
-権限、対象ファイル、変更内容、保存先、外部送信範囲が不明な場合、推測で実行せず、ユーザーに確認する。
+## 10. Timestamps
 
-## 10. タイムスタンプ
+Begin Claude and Codex replies with the actual Japan Standard Time in this format:
 
-ClaudeとCodexの回答冒頭に、日本標準時のタイムスタンプを次の形式で表示する。
+`【YYYY-MM-DD HH:mm JST】`
 
-【YYYY-MM-DD HH:mm JST】
+Use the actual time at the moment of the reply. Do not invent a time if it cannot be checked.
 
-回答時点の実際の時刻を使用し、確認できない場合は推測で記載しない。
+## 11. Limits of these rules
 
-## 11. 規則の適用限界
+These are behavioral instructions to AI agents. They do not replace technical enforcement by the OS, sandbox, or permission controls.
 
-本書はAIへの行動指示であり、OS、サンドボックス、権限制御による技術的な強制を代替しない。
-
-実際の権限設定と併用し、必要な範囲で実行結果を検証する。
-
-この文書自体の変更にも、事前提示とユーザー承認を必要とする。
+Use appropriate permission settings and verify results within the necessary scope. Changes to this document also require advance presentation and user approval.

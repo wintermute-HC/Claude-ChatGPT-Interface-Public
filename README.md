@@ -1,180 +1,167 @@
-# Claude-ChatGPT-Interface
+# Claude-ChatGPT-Interface-Public
 
-Claude Code から OpenAI Codex を呼び出すプラグイン `openai/codex-plugin-cc` について、公式資料・ソースコードで確認した内容と、資料に記載された導入手順をまとめたものです。
+English | [日本語](README.ja.md)
 
-本書には、資料・コードの確認結果と、2026-11-15に実施した範囲を限定した試験結果を記載します。Claude Code経由の導入・呼び出しと、全面的な安全性監査は未実施です。本プロジェクト固有の運用規則は [CLAUDE.md](CLAUDE.md) に定めます。
+Verification notes and proposed operating rules for using OpenAI Codex from Claude Code through [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-cc).
 
-- 資料確認・限定試験日：2026-11-15
-- 実際に本文を確認した一次資料：
-  - [公式README（確認したコミットに固定）](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/README.md)
-  - [プラグインのマニフェスト](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/.claude-plugin/plugin.json)：作者欄OpenAI、バージョン1.0.6
-  - 下記「実装の確認範囲」「注意点」に示すソースファイル
-  - [公式料金ページ](https://learn.chatgpt.com/docs/pricing)：従来の `developers.openai.com/codex/pricing` から転送されたページの本文
-- ソースの確認対象：コミット `db52e28f4d9ded852ab3942cea316258ae4ef346`（コミット日2026-07-07）。以下の実装説明はこの版についての記録で、将来の版にも同じ動作を保証するものではありません。
+This is an independent documentation and feedback project. The plugin itself is maintained in the OpenAI repository linked above. This repository records source inspections and limited tests conducted on **2026-11-15**. End-to-end installation and invocation from Claude Code, and a comprehensive security audit, have **not** been completed.
 
-## 公式資料で確認した内容
+## Ideas, feedback, and independent verification
 
-| 確認事項 | 判定・条件 | 一次情報での記載 |
+We welcome ideas, corrections, improvement suggestions, and reports of independent tests through [Issues](https://github.com/wintermute-HC/Claude-ChatGPT-Interface-Public/issues). Please distinguish tests performed in **Claude desktop's Code environment** from CLI or lower-level script tests.
+
+This repository accepts feedback rather than direct code contributions. Pull requests are disabled. Feedback does not grant write access; the owner decides which changes to adopt. The owner has limited time and cannot promise to reproduce every report or provide ongoing support.
+
+For test reports, include the date, OS and application versions, plugin commit/version, steps, expected and actual results, and any changed files. Use synthetic data and redact credentials, personal information, and conversation history from logs. Do not test with unpublished research or sensitive data. Only run tests within environments and permissions you are authorized to use. If you cannot provide an appropriate test environment, documentation review and ideas are equally welcome.
+
+### Sponsorship interest
+
+Financial support for documentation and independent verification would be welcome. A payment channel has not yet been set up. If interested, please open an Issue expressing interest without posting payment details or other private information. Sponsorship does not grant repository write access, influence verification conclusions, or guarantee a particular result. Payment instructions will be published after a receiving account is established.
+
+## Sources and scope
+
+- Inspection and limited-test date: **2026-11-15**.
+- Plugin snapshot: **1.0.6**, commit [`db52e28f4d9ded852ab3942cea316258ae4ef346`](https://github.com/openai/codex-plugin-cc/tree/db52e28f4d9ded852ab3942cea316258ae4ef346), dated 2026-07-07. Implementation statements below apply to this snapshot, not necessarily later versions.
+- Sources whose contents were inspected: the [official README](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/README.md), [plugin manifest](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/.claude-plugin/plugin.json), source files linked below, and the [official pricing page](https://learn.chatgpt.com/docs/pricing), reached through the former `developers.openai.com/codex/pricing` URL.
+
+Project-specific rules are in [CLAUDE.md](CLAUDE.md). They are instructions to agents, not technical enforcement of permissions.
+
+## What the official documentation says
+
+| Topic | Documented behavior or condition |
+| --- | --- |
+| Publisher | The plugin is published under GitHub's `openai` organization. Its manifest names OpenAI as author; its [license is Apache-2.0](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/LICENSE). This does not guarantee runtime safety. |
+| Installation | Add the marketplace, install the plugin, run `/reload-plugins`, then `/codex:setup`. Commands are reproduced below. |
+| Authentication | ChatGPT sign-in or an OpenAI API key. The plugin README mentions Free, whereas the pricing page inspected describes Free access in the desktop app. We have not established that a Free account can use this CLI-based plugin. |
+| Delegation | The README documents `/codex:rescue` and delegation requests in natural language. Roles and approval requirements for this project are defined in `CLAUDE.md`. |
+| Integration | The plugin uses the local Codex CLI, its authentication state, and Codex app-server on the same machine. Local integration does not mean that no information reaches external services. |
+| Hooks | The [hook configuration](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/hooks/hooks.json) declares `SessionStart`, `SessionEnd`, and `Stop`. The review gate is disabled in the [default state](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/scripts/lib/state.mjs). |
+| Installing Codex | The [setup command instructions](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/commands/setup.md) tell Claude to ask before installing Codex when it is missing and npm is available. An instruction is distinct from an OS-enforced restriction. |
+
+### Static inspection coverage
+
+Inspection covered relevant parts of the README, manifest, dependency declarations, delegation instructions, approval and sandbox settings, session import, hooks, review gate, setup instructions, review-context collection, state files, and local communication. This was not an audit of every source file, dependency, or runtime component. These observations must be distinguished from the tests below.
+
+### Usage and billing
+
+- **ChatGPT sign-in:** Codex use is subject to the account's plan and applicable limits. Free-account eligibility for this plugin remains unverified.
+- **API-key authentication:** API usage is billed under API pricing, separately from a ChatGPT subscription's included usage.
+- **Current limits:** Check [official pricing](https://learn.chatgpt.com/docs/pricing) and the [usage dashboard](https://chatgpt.com/codex/settings/usage). This document does not fix plan prices or task counts, because conditions can change.
+
+## Tests performed and their limits
+
+Environment: macOS, Node.js **v26.13.1**, npm **11.20.0**, Codex CLI **0.169.0**, and the plugin snapshot identified above. Tests used dedicated synthetic repositories and harmless text, not research data or conversation histories.
+
+| Test | Result | What this establishes |
 | --- | --- | --- |
-| プラグインの公開元 | OpenAIの公開リポジトリ | `openai/codex-plugin-cc` を確認。ライセンスは [Apache-2.0](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/LICENSE) |
-| `/plugin marketplace add openai/codex-plugin-cc` | 正しい | README に同じコマンドが記載 |
-| `/plugin install codex@openai-codex` | 正しい | README に同じコマンドが記載 |
-| `/codex:setup` の実行順序 | 再読み込み後に実行 | README ではインストール後に `/reload-plugins` を実行してから `/codex:setup` |
-| 認証方法 | ChatGPTアカウントまたはAPIキー | プラグインREADMEは無料プランも記載。ただし現在の公式料金ページはFreeの利用範囲をデスクトップアプリとしており、無料アカウントでCLI経由のプラグインを利用できるとは保証しない。未ログイン時は `!codex login` |
-| 作業の委任 | コマンドまたは自然文で依頼 | 公式READMEは `/codex:rescue` と自然文による委任例を記載。本プロジェクトの役割・変更承認は `CLAUDE.md` に定める |
-| 使用量・課金 | 認証方法によって異なる | ChatGPT認証はCodexのプラン条件、APIキー認証はAPI料金が適用される |
+| Official automated tests: `npm test` | **91 passed, 0 failed, 0 skipped** | Includes tests using a simulated Codex. This does not demonstrate that every live-service feature works. |
+| Lower-level plugin script connecting to actual Codex | Passed | `setup` returned `ready: true`; ChatGPT authentication was confirmed. |
+| Synthetic task sent to actual Codex | Passed | The requested marker was returned; the response's changed-file list was empty. No file operations were requested and no write option was supplied. |
+| Normal review using actual Codex | Passed | Detected a synthetic change from addition to subtraction. The reviewed file remained unchanged afterward. |
+| Collection of text outside a workspace through an untracked symlink | **Reproduced locally** | A harmless external marker appeared in collected context. Sending that marker to the service was not tested. |
 
-### 実装の確認範囲
+The automated tests were run from the [official test suite](https://github.com/openai/codex-plugin-cc/tree/db52e28f4d9ded852ab3942cea316258ae4ef346/tests). Live-service tests invoked `setup`, `task` without write permission, and `review` through `codex-companion.mjs`. They were **not** invoked through Claude Code's slash commands or its desktop Code interface.
 
-今回確認したのは、公式README、マニフェスト、依存関係の宣言、作業委任の指示、承認・サンドボックス指定、セッション取り込み、フック定義、レビューゲート、セットアップ指示、レビュー資料の収集、状態ファイル・ローカル通信の関係箇所です。全コード・依存関係の監査や安全性の保証を行ったものではありません。以下は静的な確認結果で、実行結果ではありません。
+An initial setup attempt could not open Codex's state database under the test runner's access restrictions; it succeeded after the required permission was granted. The initial restricted automated-test run was stopped and rerun with permission. The table reports the completed rerun.
 
-- **出所**：`openai` 組織の公開リポジトリで、マニフェストの作者欄はOpenAI、バージョンは1.0.6です。これだけで実行時の安全性が保証されるわけではありません。
-- **連携方式**：公式READMEでは、同じマシンのCodex CLIとCodex app-serverを利用すると説明されています。ローカルでの連携は、サービスへの情報送信がないことを意味しません。
-- **フック**：[フック定義](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/hooks/hooks.json)に `SessionStart`、`SessionEnd`、`Stop` があります。[設定初期値](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/scripts/lib/state.mjs)ではレビューゲートが無効です。
-- **インストール前の確認指示**：[セットアップのコマンド指示](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/commands/setup.md)では、Codexが未導入でnpmが利用可能な場合、インストールするかユーザーに質問するよう定められています。プロンプト上の指示と技術的な強制は区別します。
+### Reproduced review-context boundary issue
 
-### 料金と使用量
+In the inspected version, context collection for `/codex:adversarial-review` can follow an untracked symbolic link and include text from outside the working repository. A local invocation of `collectReviewContext`, using a harmless marker outside a synthetic repository, reproduced this behavior.
 
-ChatGPTで認証する場合とAPIキーで認証する場合では、利用条件・課金方式が異なります。
+The implementation incorporates this context into the adversarial-review prompt. No existing user files or secrets were used, and actual service transmission of the marker was not tested. This observation alone does not establish remote exploitability.
 
-- **ChatGPT認証**：契約プランのCodexの利用条件が適用されます。Freeの利用範囲について、プラグインREADMEと現在の公式料金ページでは説明の粒度が異なるため、無料アカウントでこのプラグインを使えるとは保証しません。
-- **APIキー認証**：API料金が適用され、ChatGPTサブスクリプションの利用枠とは区別されます。
-- **上限・追加利用**：プラン別の利用条件は変更されるため、本書に固定の金額・利用回数は掲載しません。最新条件は[公式料金案内](https://learn.chatgpt.com/docs/pricing)、残量は[使用量ダッシュボード](https://chatgpt.com/codex/settings/usage)で確認してください。
+Before reviewing, inspect untracked files and their link targets. Do not include links to information outside the approved sharing scope. A code-level mitigation would skip such links or validate that their resolved targets remain inside the workspace. **The plugin itself has not been patched in this project.**
 
-## 実施した試験と未確認範囲
+Sources: [untracked-file collection](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/scripts/lib/git.mjs#L197), [insertion into the review prompt](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/scripts/codex-companion.mjs#L409).
 
-### 試験環境と結果
+### Not yet verified
 
-Mac上のNode.js v26.13.1、npm 11.20.0、Codex CLI 0.169.0で実施しました。対象は上記コミットのプラグインです。ユーザーの研究データや会話履歴を使わず、試験用のリポジトリと無害な文字列を使用しました。
+- End-to-end installation and invocation in Claude Code, including Claude desktop's Code interface. The shell-based test environment did not locate a standalone Claude Code executable; that does not establish whether desktop Code is available. Later screen access to desktop Code does not constitute an end-to-end plugin test.
+- Enforcement of write boundaries with a live model, transfer of real conversation history, and a live review-gate interaction with Claude Code.
+- Captured network traffic and destination verification; Codex/Claude internals; dependency implementations and distributed packages; Windows behavior.
+- Comprehensive tests of state-file tampering, local IPC permissions and input sizes, and concurrent operations.
+- Live-service use with API-key authentication, eligibility of individual account types including Free, and actual billing amounts.
 
-| 試験 | 結果 | 確認できた範囲 |
-| --- | --- | --- |
-| 公式の自動テスト `npm test` | 91件成功、失敗0、スキップ0 | 模擬Codexを使う試験を含む。実サービス全機能の成功を示すものではない |
-| プラグインの下位スクリプトから実Codexへの接続 | 成功 | setupの結果が `ready: true`。ChatGPT認証を確認 |
-| 実Codexへの試験用タスク送信 | 成功 | 指定した文字列が返り、返答の変更ファイル一覧は空。ファイル操作を依頼せず、書き込みオプションなし |
-| 実Codexによる通常レビュー | 成功 | 試験用の加算を減算に変えた誤変更を指摘。レビュー後も対象ファイルの内容は変化なし |
-| 未追跡リンクを通じた作業フォルダ外の本文収集 | 再現 | ローカルで無害なマーカーを収集することを確認。マーカーのサービスへの送信は未試験 |
+These results are not a comprehensive security audit or a guarantee of all features or overall safety.
 
-自動テストは[公式テスト群](https://github.com/openai/codex-plugin-cc/tree/db52e28f4d9ded852ab3942cea316258ae4ef346/tests)を実行しました。実サービスの試験は `codex-companion.mjs` の `setup`、書き込み指定なしの `task`、`review` を試験用リポジトリに対して実行したものです。Claude Codeのスラッシュコマンドから実行した試験ではありません。
+## Installation steps from the official README
 
-初回のsetupは実行環境のアクセス制限でCodexの状態データベースを開けず失敗し、必要な許可を得た再実行で成功しました。自動テストも制限下の実行を中断し、許可後の再実行結果を上表に記載しています。
+These steps are documented procedures, not a claim that desktop installation was tested here. Run them in Claude Code on a machine with access to your chosen repository. Cloud availability depends on that environment's configuration and permissions.
 
-### 確認した情報収集範囲の問題
+Requirements: Node.js **18.18 or later**, and a ChatGPT account eligible for Codex CLI or an OpenAI API key. Confirm account eligibility using current official information.
 
-`/codex:adversarial-review` の資料収集処理では、未追跡のシンボリックリンクを追従し、作業フォルダ外のリンク先の本文を取り込む場合があります。無害な試験データを使った `collectReviewContext` のローカル実行で、フォルダ外に置いたマーカー本文が収集結果に含まれることを再現しました。
+1. Add the marketplace:
 
-実装上、この収集結果はadversarial reviewのプロンプトに組み込まれます。機密情報やユーザーの既存ファイルを使う試験、マーカーを実際にサービスへ送信する試験は行っていません。この結果だけで遠隔攻撃が可能とは判断しません。
-
-レビュー前に未追跡ファイルとリンク先を確認し、共有対象外の情報へのリンクをレビュー対象に含めないでください。根本的な対策は、収集処理でリンクを除外するか、リンク先の実パスが作業フォルダ内か検証することです。今回、プラグイン自体への修正は行っていません。
-
-根拠：[未追跡ファイルの収集処理](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/scripts/lib/git.mjs#L197)、[プロンプトへの組み込み](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/scripts/codex-companion.mjs#L409)。
-
-### 未確認の範囲
-
-- Claude Code経由のインストールとコマンド呼び出し。この試験環境ではClaude Codeの実行ファイルを確認できませんでした。
-- 実モデルによる書き込み権限の境界試験、実会話履歴のtransfer、実際のレビューゲートによるClaude Codeとの連携。
-- 通信の捕捉・送信先の検証、Codex/Claude本体、依存パッケージ本体・配布物の監査、Windowsでの動作。
-- 状態ファイルの改変、ローカル通信の入力サイズ・接続権限、同時実行の競合などの網羅的な検証。
-- APIキー認証での実サービス利用、無料プラン等の個別アカウントでの利用可否、請求額。
-
-以上の結果は、全機能の正常性や安全性全般を保証するものではありません。
-
-## 公式READMEに記載された導入手順
-
-以下は、対象リポジトリにアクセスできるパソコンのClaude Codeで実行する手順です。クラウド環境での実行可否は、その環境の構成・権限によります。
-
-### 前提
-
-- Node.js 18.18 以上
-- Codex CLIを利用できるChatGPTアカウント、またはOpenAI APIキー。無料プランでの利用可否は、公式料金案内と実際のアカウント条件を確認してください。
-
-### 手順
-
-1. マーケットプレイスを追加する
-
-   ```
+   ```text
    /plugin marketplace add openai/codex-plugin-cc
    ```
 
-2. プラグインをインストールする
+2. Install the plugin:
 
-   ```
+   ```text
    /plugin install codex@openai-codex
    ```
 
-3. プラグインを再読み込みする
+3. Reload plugins:
 
-   ```
+   ```text
    /reload-plugins
    ```
 
-4. セットアップを実行する
+4. Check setup:
 
-   ```
+   ```text
    /codex:setup
    ```
 
-   公式のセットアップ指示では、Codex CLI が未インストールで npm が使える場合、インストールするか質問することになっています。自分で入れる場合は `npm install -g @openai/codex` です。
+   The setup instructions call for asking before installing Codex if it is missing and npm is available. The documented manual installation command is `npm install -g @openai/codex`.
 
-5. Codex にログインしていない場合はログインする
+5. If not signed in, run:
 
-   ```
+   ```text
    !codex login
    ```
 
-6. 読み込み状態とレビューの実行結果を確認する
+6. Check that `codex:codex-rescue` appears under `/agents`. This alone does not verify authentication or successful execution. For an initial read-only review, the official README suggests:
 
-   以下は実施するための手順であり、本書で実行済みとするものではありません。
-
-   `/agents` に `codex:codex-rescue` が表示されることを確認します。表示だけで認証や実行の成功までは確認できません。公式READMEが勧める最初の実行は次のとおりです。完了後に `/codex:result` で結果を確認してください。
-
-   ```
+   ```text
    /codex:review --background
    ```
 
-   続いて `/codex:status` で進捗を確認し、完了してから `/codex:result` で結果を取得します。レビュー対象がない場合やエラーの場合もあるため、起動表示だけで成功と判断しません。
+   Check progress with `/codex:status`, then retrieve the completed result with `/codex:result`. A launch message alone is not proof of success; there may be no reviewable changes or an execution error.
 
-## 公式READMEに記載されたコマンド
+## Documented commands
 
-| コマンド | 内容 |
+| Command | Purpose |
 | --- | --- |
-| `/codex:review` | 未コミットの変更、または `--base <ref>` で指定したブランチ差分を Codex がレビューする(読み取り専用) |
-| `/codex:adversarial-review` | 設計判断や前提に踏み込んで反論するレビュー。フォーカスを文章で指定できる(コードは修正しない) |
-| `/codex:rescue` | 調査や修正などのタスクを Codex に委任する |
-| `/codex:transfer` | 現在の Claude Code セッションから Codex のスレッドを作り、`codex resume <session-id>` を表示する |
-| `/codex:status` | 実行中・最近の Codex ジョブを表示する |
-| `/codex:result` | 完了したジョブの結果を表示する |
-| `/codex:cancel` | 実行中のバックグラウンドジョブを中止する |
-| `/codex:setup` | Codex のインストールと認証を確認する。レビューゲートの有効化・無効化もここで行う |
+| `/codex:review` | Read-only review of uncommitted changes, or a branch comparison using `--base <ref>`. |
+| `/codex:adversarial-review` | Read-only challenge review of assumptions and design choices; accepts focus text. Does not fix code. |
+| `/codex:rescue` | Delegate investigation or implementation tasks to Codex. Check write permissions first. |
+| `/codex:transfer` | Create a Codex thread from the current Claude session and print `codex resume <session-id>`. |
+| `/codex:status` | Show running and recent jobs. |
+| `/codex:result` | Retrieve a completed job's result. |
+| `/codex:cancel` | Cancel an active background job. |
+| `/codex:setup` | Check installation and authentication; optionally enable or disable the review gate. |
 
-## 役割分担と承認
+## Project roles and approval
 
-このプロジェクトでは、ClaudeとCodexの役割を固定しません。双方が独立分析、推論、コード作成、実装、検証を担当できます。重要な判断では可能な範囲で相互検証し、最終判断はユーザーが行います。
+Claude and Codex may both analyze, reason, implement, and verify. Roles are not fixed. Important decisions should receive independent cross-checking where practical, with final authority remaining with the user.
 
-- 調査・レビューの段階では、既存ファイルを変更しません。
-- 既存ファイルは原則として別名保存とし、上書きは対象を指定した明示的な承認がある場合に限ります。
-- Git commitとpushは、ローカルのファイル変更とは別に承認を得ます。
-- ファイル変更前に、対象、理由、差分、影響、保存先、実行担当AIを提示し、ユーザーの明示的な承認を得ます。
-- 自動委任によるファイル変更は行いません。変更は、対象・内容・実行者についてユーザーが明示的に承認した範囲に限定します。
-- Codexへの作業委任には `/codex:rescue`、レビューには `/codex:review` または `/codex:adversarial-review` を使用できます。ただし、コマンドの実行自体を変更承認の代わりにはしません。
-- `/codex:transfer` は明示的な承認がある場合、レビューゲートは明示的な依頼がある場合に限り使用します。
+- Do not change existing files during investigation or review.
+- Before writing, present the target files, rationale, diff, expected impact, destination, and executing AI; obtain explicit approval.
+- Prefer a new filename. Overwriting requires explicit approval identifying the target.
+- Do not change files through automatic delegation. Restrict changes to the scope and executor approved by the user.
+- File changes and Git commit/push require separate approvals.
+- A command invocation is not a substitute for approval of changes.
+- Use `/codex:transfer` only with explicit approval, and enable the review gate only when explicitly requested.
 
-詳細は [CLAUDE.md](CLAUDE.md) に従います。これらは運用上の規則であり、プラグインやOSの権限制御を代替するものではありません。
+See [CLAUDE.md](CLAUDE.md) for the complete rules. These instructions do not replace OS or sandbox controls.
 
-## 注意点
+## Operational cautions
 
-- **作業委任の書き込み権限**：この版の `codex-rescue` エージェントには、Claudeが自発的にCodexへ委任するよう促す指示があります。また、読み取り専用または変更を伴わないレビュー・診断・調査の依頼を除き、`--write` を付ける指示があります。実装は `--write` がある場合に `workspace-write`、ない場合に `read-only` を指定し、承認ポリシーの既定値は `never` です。書き込み可能な場合、許可範囲内の編集で追加確認が入るとは限りません。本プロジェクトでは、変更前にユーザー承認を得ます。調査時は読み取り専用を明示し、実際の権限も確認してください。承認条件を権限設定で保証できない場合は、`CLAUDE.md` 第7節に従って変更操作を停止します。レビュー系コマンドは公式READMEで読み取り専用とされています。
-- **読み取り専用の意味**：対象ソースを修正しないことと、情報の収集範囲やサービスへの送信は別です。上記のリンク先収集の問題に注意してください。また、プラグインは状態・ジョブ・ログを保存し、終了時に削除・プロセス停止を行う処理があります。「読み取り専用」は一切の状態ファイルを書かないという意味ではありません。
-- **会話履歴の引き継ぎ**：`/codex:transfer` は `~/.claude/projects` 配下の指定されたClaudeセッションを、ローカルのCodex app-serverのセッション取り込み機能に渡します。プラグインからローカルapp-serverへの取り込み要求を確認しましたが、Codex内部の取り込み処理や通信の実測は行っていません。取り込んだ履歴をCodexで利用すると、サービスへの情報送信が伴う可能性があります。実行前に対象履歴と共有範囲を確認し、明示的な承認を得ます。
-- **使用量と課金**：ChatGPTでの認証では契約プランのCodex利用条件が適用されます。APIキーでの認証ではAPI料金が適用されます。現在の上限と残量は公式料金案内と使用量ダッシュボードで確認してください。
-- **レビューゲート**：`/codex:setup --enable-review-gate` で有効にすると、Claude Codeの停止時の `Stop` フックでCodexレビューを実行します。指摘がある場合に加え、レビュー失敗・タイムアウト・出力形式の不備でも停止をブロックする経路があります。一方、セットアップ状況によってはレビューを実行せず戻る場合があります。自動で修正の成功を保証する機能ではありません。長時間のループや使用量消費につながるため、本プロジェクトでは明示的な依頼がある場合に限り有効にし、監視できるときに使用します。無効化は `/codex:setup --disable-review-gate` です。
-- **設定と承認規則**：プラグインは同じマシンのCodex CLIと認証状態を使用し、その設定を読み込みます。ただし、処理ごとに承認ポリシーやサンドボックスを明示指定する実装もあります。プロジェクト単位の `.codex/config.toml` は信頼済みのプロジェクトでのみ読み込まれます。`CLAUDE.md` の規則だけで技術的な権限制御が保証されるわけではありません。
-
-確認した一次資料（2026-11-15、プラグインのコミット `db52e28f4d9ded852ab3942cea316258ae4ef346`）：
-
-- [公式README](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/README.md)
-- [作業委任エージェント](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/agents/codex-rescue.md)
-- [タスクの実行権限](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/scripts/codex-companion.mjs)
-- [承認ポリシーとセッション取り込み](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/scripts/lib/codex.mjs)
-- [停止時のレビューゲート](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/scripts/stop-review-gate-hook.mjs)
-- [公式料金案内](https://learn.chatgpt.com/docs/pricing)
+- **Delegation and writing:** The inspected [rescue-agent instructions](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/agents/codex-rescue.md) encourage proactive delegation. They also direct the agent to add `--write` by default, except for explicitly read-only requests or review, diagnosis, or research without edits. The [task implementation](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/scripts/codex-companion.mjs) chooses `workspace-write` with `--write`, otherwise `read-only`; the [approval-policy default](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/scripts/lib/codex.mjs) is `never`. Additional confirmation is not assured for edits within the allowed scope. This project requires approval before changes. Explicitly request read-only investigation and verify actual permissions; stop change operations if approval requirements cannot be enforced, as required by section 7 of `CLAUDE.md`.
+- **Read-only does not mean no data collection:** Not editing target code is different from limiting collected information or service transmission. See the symlink issue above. The plugin also writes state, job, and log files and has cleanup and process-termination logic; read-only review does not mean that no state files are written.
+- **Conversation transfer:** `/codex:transfer` passes a selected session under `~/.claude/projects` to the local app-server's session importer. The plugin's import request was inspected; Codex's internal import behavior and network traffic were not measured. Subsequent use may transmit information to the service. Check the history and sharing scope and obtain explicit approval first.
+- **Usage:** ChatGPT sign-in follows applicable Codex plan conditions; API-key use follows API pricing. Consult current pricing and the usage dashboard.
+- **Review gate:** `/codex:setup --enable-review-gate` enables review through the `Stop` hook. The [implementation](https://github.com/openai/codex-plugin-cc/blob/db52e28f4d9ded852ab3942cea316258ae4ef346/plugins/codex/scripts/stop-review-gate-hook.mjs) can block stopping for findings, review failures, timeouts, or invalid output. Some setup conditions instead return without reviewing. It does not guarantee successful fixes. Long loops can consume usage quickly; enable only on explicit request and while monitoring. Disable with `/codex:setup --disable-review-gate`.
+- **Configuration:** The plugin uses the same local Codex installation and authentication state, and reads its configuration. Individual operations also explicitly set some approval and sandbox values. Project `.codex/config.toml` files load only for trusted projects. A `CLAUDE.md` file alone cannot guarantee technical enforcement.
