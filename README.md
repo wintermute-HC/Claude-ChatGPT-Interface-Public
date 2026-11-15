@@ -1,6 +1,6 @@
 # Claude-ChatGPT-Interface
 
-Claude Code から OpenAI Codex(ChatGPT 側)を呼び出すプラグイン `openai/codex-plugin-cc` について、SNS 投稿の内容を一次情報で検証した結果と、正しい導入手順をまとめたものです。
+Claude Code から OpenAI Codex を呼び出すプラグイン `openai/codex-plugin-cc` について、一次情報に基づく検証結果と導入手順をまとめたものです。
 
 - 検証日: 2026-11-14
 - 一次情報:
