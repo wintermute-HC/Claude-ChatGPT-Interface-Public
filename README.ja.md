@@ -14,6 +14,14 @@ Claude Code から OpenAI Codex を呼び出すプラグイン `openai/codex-plu
   - [公式料金ページ](https://learn.chatgpt.com/docs/pricing)：従来の `developers.openai.com/codex/pricing` から転送されたページの本文
 - ソースの確認対象：コミット `db52e28f4d9ded852ab3942cea316258ae4ef346`（コミット日2026-07-07）。以下の実装説明はこの版についての記録で、将来の版にも同じ動作を保証するものではありません。
 
+## 既報と本プロジェクトの位置付け
+
+本リポジトリは、**既報の独立した追試、確認記録、運用案**を共有するものです。リンク問題の初発見や、人の承認を組み込んだClaude–Codex連携の発明は主張しません。本規則による安全性・誤り率の改善を示す比較実験も実施していません。
+
+リンク問題は[Issue #597](https://github.com/openai/codex-plugin-cc/issues/597)と[Issue #828](https://github.com/openai/codex-plugin-cc/issues/828)で既報です。修正案の[PR #834](https://github.com/openai/codex-plugin-cc/pull/834)は2026-11-15の確認時点で未統合でした。人の承認を含む先行例には[cross-agent-harness](https://github.com/harness17/cross-agent-harness)や[codex-claude-handoff](https://github.com/siglernir-ai/codex-claude-handoff)があり、承認の粒度や条件は本規則と異なります。
+
+出典、確認水準、調査の限界は[既報・関連事例の調査記録](RELATED_WORK.ja.md)にまとめています。[English summary](RELATED_WORK.md)もあります。
+
 ## 意見・独立検証・支援の募集
 
 [Issues](https://github.com/wintermute-HC/Claude-ChatGPT-Interface-Public/issues)で、アイデア、訂正、改善提案、独立検証の報告を受け付けます。ClaudeデスクトップのCode環境での試験と、CLI・下位スクリプト経由の試験は区別してください。
@@ -73,7 +81,9 @@ Mac上のNode.js v26.13.1、npm 11.20.0、Codex CLI 0.169.0で実施しました
 
 初回のsetupは実行環境のアクセス制限でCodexの状態データベースを開けず失敗し、必要な許可を得た再実行で成功しました。自動テストも制限下の実行を中断し、許可後の再実行結果を上表に記載しています。
 
-### 確認した情報収集範囲の問題
+### 独立して再現した既知の情報収集範囲の問題
+
+この問題は[既報 #597](https://github.com/openai/codex-plugin-cc/issues/597)・[#828](https://github.com/openai/codex-plugin-cc/issues/828)の追試であり、新発見ではありません。リンク除外による対策も[PR #834](https://github.com/openai/codex-plugin-cc/pull/834)で提案済みです。
 
 `/codex:adversarial-review` の資料収集処理では、未追跡のシンボリックリンクを追従し、作業フォルダ外のリンク先の本文を取り込む場合があります。無害な試験データを使った `collectReviewContext` のローカル実行で、フォルダ外に置いたマーカー本文が収集結果に含まれることを再現しました。
 
