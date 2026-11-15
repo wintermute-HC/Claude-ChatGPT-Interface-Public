@@ -6,6 +6,14 @@ Verification notes and proposed operating rules for using OpenAI Codex from Clau
 
 This is an independent documentation and feedback project. The plugin itself is maintained in the OpenAI repository linked above. This repository records source inspections and limited tests conducted on **2026-11-15**. End-to-end installation and invocation from Claude Code, and a comprehensive security audit, have **not** been completed.
 
+## Prior art and project positioning
+
+This repository records **independent replications, verification notes, and proposed operating rules**. It does not claim first discovery of the symlink issue or invention of human-approved Claude–Codex collaboration. No comparative experiment has established that these rules improve safety or error rates.
+
+The symlink issue was already described in [Issue #597](https://github.com/openai/codex-plugin-cc/issues/597) and [Issue #828](https://github.com/openai/codex-plugin-cc/issues/828); [PR #834](https://github.com/openai/codex-plugin-cc/pull/834) proposes a fix and remained unmerged when checked on 2026-11-15. Prior approval-based workflows include [cross-agent-harness](https://github.com/harness17/cross-agent-harness) and [codex-claude-handoff](https://github.com/siglernir-ai/codex-claude-handoff). Their approval boundaries differ from this project's rules.
+
+See [Prior Art and Related Work](RELATED_WORK.md) and the [detailed Japanese research record](RELATED_WORK.ja.md) for sources, verification levels, and limitations.
+
 ## Ideas, feedback, and independent verification
 
 We welcome ideas, corrections, improvement suggestions, and reports of independent tests through [Issues](https://github.com/wintermute-HC/Claude-ChatGPT-Interface-Public/issues). Please distinguish tests performed in **Claude desktop's Code environment** from CLI or lower-level script tests.
@@ -64,7 +72,9 @@ The automated tests were run from the [official test suite](https://github.com/o
 
 An initial setup attempt could not open Codex's state database under the test runner's access restrictions; it succeeded after the required permission was granted. The initial restricted automated-test run was stopped and rerun with permission. The table reports the completed rerun.
 
-### Reproduced review-context boundary issue
+### Independently reproduced known review-context boundary issue
+
+This is a replication of the known issue reported in [#597](https://github.com/openai/codex-plugin-cc/issues/597) and [#828](https://github.com/openai/codex-plugin-cc/issues/828), not a new discovery. Link-exclusion mitigation is also proposed in [PR #834](https://github.com/openai/codex-plugin-cc/pull/834).
 
 In the inspected version, context collection for `/codex:adversarial-review` can follow an untracked symbolic link and include text from outside the working repository. A local invocation of `collectReviewContext`, using a harmless marker outside a synthetic repository, reproduced this behavior.
 
