@@ -6,7 +6,7 @@ On one Mac, a local Claude Code session and an existing Codex Work chat exchange
 
 Two single-round restart tests returned acknowledgments in 15 and 16 seconds, measured between outgoing and acknowledgment file entries. Codex progress was invisible in the first trial and visible in real time in the second, as observed by the user. An earlier preflight display check also failed. These are different measurements from end-to-end display latency.
 
-A separate synthetic numerical test passed all 468 frozen evaluation cases in Colab. A known boundary-case specification violation and a weakness in the evaluator explain why that pass did not establish full conformance. The revised candidate passed regression checks against the same cases. Blind evaluation of the candidate remains pending.
+A separate synthetic numerical test passed all 468 frozen evaluation cases in Colab. A known boundary-case specification violation and a weakness in the evaluator explain why that pass did not establish full conformance. Codex reported that the revised candidate passed all 468 previously disclosed cases in a regression run with the original evaluator. Blind evaluation of the candidate remains pending.
 
 ## 試験環境と判定方法
 
