@@ -6,6 +6,10 @@ Verification notes and proposed operating rules for using OpenAI Codex from Clau
 
 This is an independent documentation and feedback project. The plugin itself is maintained in the OpenAI repository linked above. This repository records source inspections and limited tests conducted on **2026-11-15**. End-to-end installation and invocation from Claude Code, and a comprehensive security audit, have **not** been completed.
 
+## Follow-up experiment
+
+[2026-11-20 communication and verification tests](docs/2026-11-20-communication-test.md) covers a local shared-file relay, Codex display interruption and restart, and a synthetic cross-verification exercise. The November 15 plugin inspection and limited tests described below have a separate scope.
+
 ## Prior art and project positioning
 
 This repository records **independent replications, verification notes, and proposed operating rules**. It does not claim first discovery of the symlink issue or invention of human-approved Claude–Codex collaboration. No comparative experiment has established that these rules improve safety or error rates.
