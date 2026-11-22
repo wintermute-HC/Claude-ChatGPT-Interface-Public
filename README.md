@@ -10,6 +10,8 @@ This is an independent documentation and feedback project. The plugin itself is 
 
 [2026-11-20 communication and verification tests](docs/2026-11-20-communication-test.md) covers a local shared-file relay, Codex display interruption and restart, and a synthetic cross-verification exercise. The November 15 plugin inspection and limited tests described below have a separate scope.
 
+[November 21 follow-up: Colab reevaluation](docs/2026-11-21-colab-reevaluation.md)
+
 ## Prior art and project positioning
 
 This repository records **independent replications, verification notes, and proposed operating rules**. It does not claim first discovery of the symlink issue or invention of human-approved Claude–Codex collaboration. No comparative experiment has established that these rules improve safety or error rates.
