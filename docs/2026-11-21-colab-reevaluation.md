@@ -1,5 +1,7 @@
 # Colab reevaluation on November 21, 2026
 
+[日本語詳細版](2026-11-21-colab-reevaluation.ja.md)
+
 ## Outcome
 
 Sol (gpt-6.2-sol) wrote the Python reevaluation cells in a Codex Work chat. The user ran the cells in Colab. Between 17:27 and 17:49 JST, repeated revisions failed to get the cells past input preparation. **Sol’s cells scored zero cases.** Claude rewrote the cell. According to Claude’s report, the user ran that cell once, from 18:08:53 to 18:08:56 JST. **The saved result records 365 of 365 cases passed.**

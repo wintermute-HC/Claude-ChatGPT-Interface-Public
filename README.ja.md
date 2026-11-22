@@ -18,7 +18,7 @@ Claude Code から OpenAI Codex を呼び出すプラグイン `openai/codex-plu
 
 [2026-11-20 通信・相互検証試験](docs/2026-11-20-communication-test.md) に、Mac上の共有ファイル通信、Codexの表示停止と再開、合成データでの相互検証を記録しました。以下の11月15日のプラグイン調査・限定試験とは実施範囲が異なります。
 
-[11月21日の追試：Colabでの再評価](docs/2026-11-21-colab-reevaluation.md)
+[11月21日の追試：Colabでの再評価](docs/2026-11-21-colab-reevaluation.ja.md)
 
 ## 既報と本プロジェクトの位置付け
 
